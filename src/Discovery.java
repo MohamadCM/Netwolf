@@ -13,13 +13,17 @@ public class Discovery {
     private String filename;
     private Vector<String[]> namesAndAddresses;
     private int port;
+    private int time;
     /**
      * @param filename is cluster-file
-     * Starts sending and receiving Discovery messages
+     * @param port is send and receive port
+     * @param time is interval time between sending each discovery message
+     * Creating an Object will start sending and receiving Discovery messages
      */
-    public Discovery(String filename, int port){
+    public Discovery(String filename, int port, int time){
         this.filename = filename;
         this.port = port;
+        this.time = time * 1000;
         namesAndAddresses = new Vector<String[]>();
 
         Thread sendDiscovery = new SendDiscovery();
@@ -107,46 +111,62 @@ public class Discovery {
         @Override
         public void run() {
             super.run();
-            readFile();
 
-            Scanner sc = new Scanner(System.in);
-
-            // Step 1:Create the socket object for
+            // Create the socket object for
             // carrying the data.
             DatagramSocket ds = null;
             InetAddress ip = null;
             try {
                 ds = new DatagramSocket();
-                 ip = InetAddress.getByName("127.0.0.1");
-            } catch (SocketException | UnknownHostException e) {
+            } catch (SocketException e) {
                 System.out.println("Connection failed");
             }
 
-            byte buf[] = null;
+            byte buffer[] = null;
 
                 while (true) {
-                    String inp = "N4 192.168.1.4,N5 192.168.1.5";
+                    readFile();
+
+
+                    // Create Sent string
+                    String sentData = null;
+                    StringBuilder inp = new StringBuilder();
+                    for (int i = 0; i < namesAndAddresses.size(); i++) {
+                        String[] tmp = namesAndAddresses.get(i);
+                        if(i != 0)
+                            inp.append(",").append(tmp[0]).append(" ").append(tmp[1]);
+                        else
+                            inp.append(tmp[0]).append(" ").append(tmp[1]);
+                    }
+                    sentData = inp.toString();
 
                     // Convert the String input into the byte array.
-                    buf = inp.getBytes();
+                    buffer = sentData.getBytes();
 
-                    // Create the datagramPacket for sending
-                    // the data.
-                    DatagramPacket DpSend =
-                            new DatagramPacket(buf, buf.length, ip, port);
+                    for (int i = 0; i < namesAndAddresses.size(); i++) {
+                        try {
+                            ip = InetAddress.getByName((namesAndAddresses.get(i))[1]);
 
-                    // Invoke the send call to actually send
-                    // the data.
-                    try {
-                        ds.send(DpSend);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                            // Create the datagramPacket for sending
+                            // the data.
+                            DatagramPacket DpSend =
+                                    new DatagramPacket(buffer, buffer.length, ip, port);
+
+                            // Invoke the send call to actually send
+                            // the data.
+                            ds.send(DpSend);
+                        } catch (UnknownHostException e) {
+                            System.out.println("Unable to send discovery message; Unknown host");
+                        } catch (IOException e) {
+                            System.out.println("Unable to send discovery message, IOException");
+                        }
                     }
-                    if (inp.equals("bye"))
+                    if (sentData.equals("bye"))
                         break;
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(time);
                     } catch (InterruptedException e) {
+                        System.out.println("Sleep interrupted!");
                     }
                 }
         }
@@ -180,6 +200,7 @@ public class Discovery {
                 // receive the data in byte buffer.
                 try {
                     ds.receive(DpReceive);
+                    System.out.println("Data received");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
