@@ -1,5 +1,14 @@
+import java.util.Vector;
+
 public class netwolf {
     public static void main(String[] args) {
-        System.out.println("Hello, world");
+        Discovery d = new Discovery("cluster-list.txt");
+        Vector<String[]> list = d.list();
+        for (int i = 0; i < list.size(); i++) {
+            String [] record = list.get(i);
+            String name = record[0];
+            String address = record[1];
+            System.out.println("Name: " + name + " | Address: " + address);
+        }
     }
 }
