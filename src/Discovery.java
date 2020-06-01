@@ -16,20 +16,23 @@ public class Discovery {
      */
     public Discovery(String filename){
         this.filename = filename;
-        Thread sendDiscovery = new SendDiscovery();
         namesAndAddresses = new Vector<String[]>();
 
+        Thread sendDiscovery = new SendDiscovery();
         sendDiscovery.run();
+        Thread getDiscovery = new GetDiscovery();
+        getDiscovery.run();
     }
     // Read file and updates namesAndAddresses Vector
-    private synchronized void readFiles(){
+    private synchronized void readFile(){
 
         namesAndAddresses.clear();
         File file = new File(filename);
 
         BufferedReader bufferedReader = null;
         try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+            FileReader fileReader = new FileReader(file);
+            bufferedReader = new BufferedReader(fileReader);
 
 
             String st;
@@ -37,6 +40,8 @@ public class Discovery {
                 String[] split = st.split(" ");
                 namesAndAddresses.add(split);
             }
+            bufferedReader.close();
+            fileReader.close();
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -44,21 +49,78 @@ public class Discovery {
             e.printStackTrace();
         }
     }
+    private synchronized void writeToFile(Vector<String[]> received){
+        try{
+
+            //Specify the file name and path here
+            File file = new File(filename);
+
+            /* This logic is to create the file if the
+             * file is not already present
+             */
+            if(!file.exists()){
+                file.createNewFile();
+            }
+
+            //Here true is to append the content to file
+            FileWriter fw = new FileWriter(file,true);
+            //BufferedWriter writer give better performance
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (int i = 0; i < received.size(); i++) {
+                String[] nameAndAddress = received.get(i);
+                String content = "\n" + nameAndAddress[0] + " " + nameAndAddress[1];
+                boolean contains = false;
+                for (int j = 0; j < namesAndAddresses.size(); j++) {
+                    String[] tmp = namesAndAddresses.get(j);
+                    if(tmp[0].equals(nameAndAddress[0]) && tmp[1].equals(nameAndAddress[1]))
+                        contains = true;
+                }
+                if(!contains) {
+                    bw.write(content);
+                }
+            }
+            //Closing BufferedWriter Stream
+            bw.close();
+            fw.close();
+
+
+        }catch(IOException ioe){
+            System.out.println("Exception occurred:");
+            ioe.printStackTrace();
+        }
+    }
 
     /**
      * @return Vector[String] containing name and addresses of the Cluster nodes
      */
     public Vector<String[]> list(){
-        readFiles();
+        readFile();
         return namesAndAddresses;
     }
+    //This class is used to send discovery messages
     private class SendDiscovery extends Thread{
         @Override
         public void run() {
             super.run();
-            readFiles();
+            readFile();
 
 
+        }
+    }
+    // This class is used to get discovery messages
+    private class GetDiscovery extends Thread{
+        @Override
+        public void run(){
+            super.run();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {}
+            Vector<String[]> tmp = new Vector<>();
+            String[] st = new String[2];
+            st[0] = "N3";
+            st[1] = "192.168.1.3";
+            tmp.add(st);
+            writeToFile(tmp);
         }
     }
 }
