@@ -1,4 +1,6 @@
 import java.io.*;
+import java.net.*;
+import java.util.Scanner;
 import java.util.Vector;
 
 /**
@@ -10,18 +12,20 @@ public class Discovery {
     private boolean locked = false;
     private String filename;
     private Vector<String[]> namesAndAddresses;
+    private int port;
     /**
      * @param filename is cluster-file
      * Starts sending and receiving Discovery messages
      */
-    public Discovery(String filename){
+    public Discovery(String filename, int port){
         this.filename = filename;
+        this.port = port;
         namesAndAddresses = new Vector<String[]>();
 
         Thread sendDiscovery = new SendDiscovery();
-        sendDiscovery.run();
         Thread getDiscovery = new GetDiscovery();
-        getDiscovery.run();
+        sendDiscovery.start();
+        getDiscovery.start();
     }
     // Read file and updates namesAndAddresses Vector
     private synchronized void readFile(){
@@ -77,6 +81,7 @@ public class Discovery {
                 }
                 if(!contains) {
                     bw.write(content);
+                    namesAndAddresses.add(nameAndAddress);
                 }
             }
             //Closing BufferedWriter Stream
@@ -104,7 +109,46 @@ public class Discovery {
             super.run();
             readFile();
 
+            Scanner sc = new Scanner(System.in);
 
+            // Step 1:Create the socket object for
+            // carrying the data.
+            DatagramSocket ds = null;
+            InetAddress ip = null;
+            try {
+                ds = new DatagramSocket();
+                 ip = InetAddress.getByName("127.0.0.1");
+            } catch (SocketException | UnknownHostException e) {
+                System.out.println("Connection failed");
+            }
+
+            byte buf[] = null;
+
+                while (true) {
+                    String inp = "N4 192.168.1.4,N5 192.168.1.5";
+
+                    // Convert the String input into the byte array.
+                    buf = inp.getBytes();
+
+                    // Create the datagramPacket for sending
+                    // the data.
+                    DatagramPacket DpSend =
+                            new DatagramPacket(buf, buf.length, ip, port);
+
+                    // Invoke the send call to actually send
+                    // the data.
+                    try {
+                        ds.send(DpSend);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (inp.equals("bye"))
+                        break;
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                    }
+                }
         }
     }
     // This class is used to get discovery messages
@@ -112,15 +156,53 @@ public class Discovery {
         @Override
         public void run(){
             super.run();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {}
-            Vector<String[]> tmp = new Vector<>();
-            String[] st = new String[2];
+            /*String[] st = new String[2];
             st[0] = "N3";
             st[1] = "192.168.1.3";
             tmp.add(st);
-            writeToFile(tmp);
+            writeToFile(tmp);*/
+
+            DatagramSocket ds = null; // Creating Socket to initiate connection
+            try {
+                ds = new DatagramSocket(port);
+            } catch (SocketException e) {
+                System.out.println("Connection failed");
+            }
+            byte[] received = new byte[65535];
+
+            DatagramPacket DpReceive = null;
+            while (true) // Receiving discovery message
+            {
+
+                // create a DatgramPacket to receive the data.
+                DpReceive = new DatagramPacket(received, received.length);
+
+                // receive the data in byte buffer.
+                try {
+                    ds.receive(DpReceive);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                Vector<String[]> tmp = new Vector<>();
+                String[] input = (Utility.convertToString(received)).split(",");
+                for (int i = 0; i < input.length; i++) {
+                    tmp.add(input[i].split(" "));
+                }
+
+                writeToFile(tmp);
+
+                // Exit the server if the client sends "bye"
+                if (Utility.convertToString(received).toString().equals("bye"))
+                {
+                    System.out.println("Client sent bye.....EXITING");
+                    break;
+                }
+
+                // Clear the buffer after every message.
+                received = new byte[65535];
+            }
         }
     }
 }
