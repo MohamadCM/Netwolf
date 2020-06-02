@@ -41,11 +41,14 @@ public class Discovery {
             FileReader fileReader = new FileReader(file);
             bufferedReader = new BufferedReader(fileReader);
 
-
+            boolean first = true;
             String st;
             while ((st = bufferedReader.readLine()) != null) {
-                String[] split = st.split(" ");
-                namesAndAddresses.add(split);
+                if(!first){ // First name and address belongs to current node
+                    String[] split = st.split(" ");
+                    namesAndAddresses.add(split);
+                }
+                first = false;
             }
             bufferedReader.close();
             fileReader.close();
