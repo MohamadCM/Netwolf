@@ -9,7 +9,6 @@ import java.util.Vector;
  * @version 1
  */
 public class Discovery {
-    private boolean locked = false;
     private String filename;
     private Vector<String[]> namesAndAddresses;
     private int port;
@@ -214,7 +213,7 @@ public class Discovery {
 
                 writeToFile(tmp);
 
-                // Exit the server if the client sends "bye"
+                // Exit the server if each client sends "bye"
                 if (Utility.convertToString(received).toString().equals("bye"))
                 {
                     System.out.println("Client sent bye.....EXITING");
