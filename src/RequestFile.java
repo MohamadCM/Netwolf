@@ -14,6 +14,7 @@ public class RequestFile {
     private String directoryAddress;
 
     Thread sendRequest;
+    private final Object lock = new Object();
     private Queue<String> ports;
     private Queue<String> fileNames;
     private Queue<Vector<String[]>> addresses;
@@ -81,10 +82,12 @@ public class RequestFile {
         }
     }
     public void sendRequest(String fileName, String TCPPort, Vector<String[]> namesAndAddresses){
-        fileNames.add(fileName);
-        ports.add(TCPPort);
-        addresses.add(namesAndAddresses);
-        sendRequest.notify();
+        synchronized (lock) {
+            fileNames.add(fileName);
+            ports.add(TCPPort);
+            addresses.add(namesAndAddresses);
+            lock.notify();
+        }
     }
     //This class is used to send file requests
     private class SendRequest extends Thread{
@@ -104,51 +107,53 @@ public class RequestFile {
             } catch (SocketException e) {
                 System.out.println("Connection failed");
             }
-            while (true) {
-                if(fileName.isEmpty()){
+            synchronized (lock) {
+                while (true) {
+                    if (fileName.isEmpty()) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            System.out.println("Sending request");
+                        }
+                    }
+
+                    this.TCPPort = ports.remove();
+                    this.fileName = fileNames.remove();
+                    this.namesAndAddresses = addresses.remove();
+                    byte buffer[] = null;
+
+                    // Create Sent string
+                    String sentData = null;
+                    StringBuilder inp = new StringBuilder();
+                    inp.append(fileName).append(" ").append(TCPPort);
+                    sentData = inp.toString();
+
+                    // Convert the String input into the byte array.
+                    buffer = sentData.getBytes();
+
+                    for (int i = 0; i < namesAndAddresses.size(); i++) {
+                        try {
+                            ip = InetAddress.getByName((namesAndAddresses.get(i))[1]);
+
+                            // Create the datagramPacket for sending
+                            // the data.
+                            DatagramPacket DpSend =
+                                    new DatagramPacket(buffer, buffer.length, ip, port);
+
+                            // Invoke the send call to actually send
+                            // the data.
+                            ds.send(DpSend);
+                        } catch (UnknownHostException e) {
+                            System.out.println("Unable to send discovery message; Unknown host");
+                        } catch (IOException e) {
+                            System.out.println("Unable to send discovery message, IOException");
+                        }
+                    }
                     try {
-                        this.wait();
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
-                        System.out.println("Sending request");
+                        e.printStackTrace();
                     }
-                }
-
-                this.TCPPort = ports.remove();
-                this.fileName = fileNames.remove();
-                this.namesAndAddresses = addresses.remove();
-                byte buffer[] = null;
-
-                // Create Sent string
-                String sentData = null;
-                StringBuilder inp = new StringBuilder();
-                inp.append(fileName).append(" ").append(TCPPort);
-                sentData = inp.toString();
-
-                // Convert the String input into the byte array.
-                buffer = sentData.getBytes();
-
-                for (int i = 0; i < namesAndAddresses.size(); i++) {
-                    try {
-                        ip = InetAddress.getByName((namesAndAddresses.get(i))[1]);
-
-                        // Create the datagramPacket for sending
-                        // the data.
-                        DatagramPacket DpSend =
-                                new DatagramPacket(buffer, buffer.length, ip, port);
-
-                        // Invoke the send call to actually send
-                        // the data.
-                        ds.send(DpSend);
-                    } catch (UnknownHostException e) {
-                        System.out.println("Unable to send discovery message; Unknown host");
-                    } catch (IOException e) {
-                        System.out.println("Unable to send discovery message, IOException");
-                    }
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         }
