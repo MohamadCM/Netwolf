@@ -1,4 +1,8 @@
 public class Utility {
+     // IP of the current machine
+
+    private static String IP;
+
     /**
      * A utility method to convert the byte array
      * data into a string representation.
@@ -17,5 +21,19 @@ public class Utility {
             i++;
         }
         return result.toString();
+    }
+
+    /**
+     * @return current machine's IP
+     */
+    public static String getIP() {
+        return IP;
+    }
+
+    /**
+     * @param IP is current machine's IP
+     */
+    public static void setIP(String IP) {
+        Utility.IP = IP;
     }
 }

@@ -11,6 +11,6 @@ public class netwolf {
             String name = record[0];
             String address = record[1];
             System.out.println("Name: " + name + " | Address: " + address);
-        }
+           }
     }
 }

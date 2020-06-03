@@ -25,6 +25,15 @@ public class Discovery {
         this.time = time * 1000;
         namesAndAddresses = new Vector<String[]>();
 
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+            Utility.setIP(socket.getLocalAddress().getHostAddress());
+            System.out.println("Local IP:- " + Utility.getIP());
+            socket.close();
+        } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
+        }
+
         Thread sendDiscovery = new SendDiscovery();
         Thread getDiscovery = new GetDiscovery();
         sendDiscovery.start();
@@ -41,14 +50,10 @@ public class Discovery {
             FileReader fileReader = new FileReader(file);
             bufferedReader = new BufferedReader(fileReader);
 
-            boolean first = true;
             String st;
             while ((st = bufferedReader.readLine()) != null) {
-                if(!first){ // First name and address belongs to current node
                     String[] split = st.split(" ");
-                    namesAndAddresses.add(split);
-                }
-                first = false;
+                    namesAndAddresses.add(split); // First name and address belongs to current node
             }
             bufferedReader.close();
             fileReader.close();
@@ -82,9 +87,11 @@ public class Discovery {
                 boolean contains = false;
                 for (int j = 0; j < namesAndAddresses.size(); j++) {
                     String[] tmp = namesAndAddresses.get(j);
-                    if(tmp[0].equals(nameAndAddress[0]) && tmp[1].equals(nameAndAddress[1]))
+                    if( (tmp[0].equals(nameAndAddress[0]) && tmp[1].equals(nameAndAddress[1])) )
                         contains = true;
                 }
+                if (nameAndAddress[1].equals(Utility.getIP())) // Current machine's IP should't get inside cluster-list file
+                    contains = true;
                 if(!contains) {
                     bw.write(content);
                     namesAndAddresses.add(nameAndAddress);
@@ -202,7 +209,7 @@ public class Discovery {
                 // receive the data in byte buffer.
                 try {
                     ds.receive(DpReceive);
-                    System.out.println("Data received");
+                    System.out.println("Discovery message received");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
