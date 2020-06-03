@@ -59,7 +59,6 @@ public class RequestFile {
                 // receive the data in byte buffer.
                 try {
                     ds.receive(DpReceive);
-                    System.out.println("Data received");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -68,6 +67,10 @@ public class RequestFile {
                 String data[] = (Utility.convertToString(received)).split(" ");
                 String filename = data[0];
                 String TCPPort = data[1];
+
+                System.out.println("Request received!\n" +
+                        "File name: " + filename +
+                        "TCP port: " + TCPPort);
 
                 // Exit the server if each client sends "bye"
                 if (Utility.convertToString(received).toString().equals("bye"))
@@ -109,7 +112,7 @@ public class RequestFile {
             }
             synchronized (lock) {
                 while (true) {
-                    if (fileName.isEmpty()) {
+                    if (fileNames.isEmpty()) {
                         try {
                             lock.wait();
                         } catch (InterruptedException e) {
