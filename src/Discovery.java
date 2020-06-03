@@ -19,7 +19,7 @@ public class Discovery {
      * @param time is interval time between sending each discovery message
      * Creating an Object will start sending and receiving Discovery messages
      */
-    public Discovery(String filename, int port, int time){
+    public Discovery(String filename, int port, int time, String currentNodeName){
         this.filename = filename;
         this.port = port;
         this.time = time * 1000;
@@ -27,7 +27,8 @@ public class Discovery {
 
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-            Utility.setIP(socket.getLocalAddress().getHostAddress());
+            Utility.setIP(socket.getLocalAddress().getHostAddress()); // Set machine's local IP
+            Utility.setNodeName(currentNodeName); // Set machine's local node-name
             System.out.println("Local IP:- " + Utility.getIP());
             socket.close();
         } catch (SocketException | UnknownHostException e) {
@@ -142,11 +143,9 @@ public class Discovery {
                     StringBuilder inp = new StringBuilder();
                     for (int i = 0; i < namesAndAddresses.size(); i++) {
                         String[] tmp = namesAndAddresses.get(i);
-                        if(i != 0)
-                            inp.append(",").append(tmp[0]).append(" ").append(tmp[1]);
-                        else
-                            inp.append(tmp[0]).append(" ").append(tmp[1]);
+                        inp.append(tmp[0]).append(" ").append(tmp[1]).append(",");
                     }
+                    inp.append(Utility.getNodeName()).append(" ").append(Utility.getIP());
                     sentData = inp.toString();
 
                     // Convert the String input into the byte array.
@@ -209,7 +208,7 @@ public class Discovery {
                 // receive the data in byte buffer.
                 try {
                     ds.receive(DpReceive);
-                    System.out.println("Discovery message received");
+                    System.out.println("Discovery message received!");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

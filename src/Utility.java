@@ -2,6 +2,7 @@ public class Utility {
      // IP of the current machine
 
     private static String IP;
+    private static String nodeName;
 
     /**
      * A utility method to convert the byte array
@@ -35,5 +36,18 @@ public class Utility {
      */
     public static void setIP(String IP) {
         Utility.IP = IP;
+    }
+
+    /**
+     * @return current machine's node name
+     */
+    public static String getNodeName() {
+        return nodeName;
+    }
+    /**
+     * @param nodeName is current machine's node-name
+     */
+    public static void setNodeName(String nodeName) {
+        Utility.nodeName = nodeName;
     }
 }
