@@ -22,14 +22,14 @@ public class Discovery {
     public Discovery(String filename, int port, int time, String currentNodeName){
         this.filename = filename;
         this.port = port;
-        this.time = time * 1000;
+        this.time = time;
         namesAndAddresses = new Vector<String[]>();
 
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
             Utility.setIP(socket.getLocalAddress().getHostAddress()); // Set machine's local IP
             Utility.setNodeName(currentNodeName); // Set machine's local node-name
-            System.out.println("Local IP:- " + Utility.getIP());
+            System.out.println("Listening on " + Utility.getIP() + ":" + port + " UDP");
             socket.close();
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
@@ -129,7 +129,7 @@ public class Discovery {
             try {
                 ds = new DatagramSocket();
             } catch (SocketException e) {
-                System.out.println("Connection failed");
+                System.out.println("Connection failed.");
             }
 
             byte buffer[] = null;
@@ -185,11 +185,6 @@ public class Discovery {
         @Override
         public void run(){
             super.run();
-            /*String[] st = new String[2];
-            st[0] = "N3";
-            st[1] = "192.168.1.3";
-            tmp.add(st);
-            writeToFile(tmp);*/
 
             DatagramSocket ds = null; // Creating Socket to initiate connection
             try {
@@ -211,7 +206,7 @@ public class Discovery {
                     ds.receive(DpReceive);
                     System.out.println("\u001B[33m" + "Discovery message received!" + "\u001B[0m");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to receive discovery message.");
                 }
 
 

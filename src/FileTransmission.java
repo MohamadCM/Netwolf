@@ -1,8 +1,8 @@
 import java.io.*;
 import java.net.*;
-import java.security.KeyPair;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Vector;
 
 /**
  * This class is used to send or receive files
@@ -33,8 +33,8 @@ public class FileTransmission {
             send.start();
         }
     }
-    public synchronized void receiveFile(String fileName, String TCPPort){
-        Thread receive = new fileReceiver(fileName, TCPPort);
+    public synchronized void receiveFile(String fileName, String TCPPort, Vector<String[]> list){
+        Thread receive = new fileReceiver(fileName, TCPPort, list);
         receive.start();
     }
     private class fileSender extends Thread{
@@ -48,6 +48,7 @@ public class FileTransmission {
                 int port = Integer.parseInt(req[1]);
             try {
                 InetAddress dest = InetAddress.getByName(req[2]);
+                System.out.println("listening on " + Utility.getIP() + ":" + port + " TCP");
 
                 File file = Utility.findFile(fileName, new File(netwolf.getDirectory()));
                 boolean fileFound = file == null;
@@ -95,9 +96,11 @@ public class FileTransmission {
     } private class fileReceiver extends Thread{
         private String fileName;
         private int port;
-        public fileReceiver(String fileName, String port){
+        private Vector<String[]> namesAndAddresses;
+        public fileReceiver(String fileName, String port, Vector<String[]> namesAndAddresses){
             this.port = Integer.parseInt(port);
             this.fileName = fileName;
+            this.namesAndAddresses = namesAndAddresses;
         }
         @Override
         public void run(){
@@ -117,6 +120,15 @@ public class FileTransmission {
                     DataOutputStream out = new DataOutputStream(server.getOutputStream());
                     out.writeUTF("OK");
                     //Receiving file here
+                    String address = server.getRemoteSocketAddress().toString();
+                    address = address.substring(1, address.length() - 1);
+                    String nodeName = "";
+                    for(String[] st: namesAndAddresses){
+                        if(st[1].equals(address))
+                            nodeName = st[0];
+                    }
+                    System.out.println("Getting " + fileName +  " from " + nodeName);
+
                     DataInputStream dis = new DataInputStream(server.getInputStream());
                     FileOutputStream fos = new FileOutputStream(directory + "/" + fileName);
                     byte[] buffer = new byte[2048];

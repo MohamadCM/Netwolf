@@ -2,7 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GUI extends JFrame {
-    public GUI(){
+    private Discovery discovery;
+    private RequestFile requestFile;
+    private FileTransmission fileTransmission;
+
+    public GUI(Discovery discovery, RequestFile requestFile, FileTransmission fileTransmission){
+        this.discovery = discovery;
+        this.requestFile = requestFile;
+        this.fileTransmission = fileTransmission;
+
         setTitle("Netwolf");
         setSize(480, 720);
         //this.pack();

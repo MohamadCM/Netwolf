@@ -13,7 +13,6 @@ import java.util.concurrent.BlockingQueue;
  */
 public class RequestFile {
     private int port;
-    private String directoryAddress;
 
     Thread sendRequest;
     private final Object lock = new Object();
@@ -22,11 +21,9 @@ public class RequestFile {
     private Queue<Vector<String[]>> addresses;
     /**
      * @param port which port to Listen to
-     * @param directoryAddress is the location of files directory on local machine
      */
-    public RequestFile(int port, String directoryAddress){
+    public RequestFile(int port){
         this.port = port;
-        this.directoryAddress = directoryAddress;
         ports = new LinkedList<String>();
         fileNames = new LinkedList<String>();
         addresses = new LinkedList<Vector<String[]>>();
@@ -116,7 +113,7 @@ public class RequestFile {
             try {
                 ds = new DatagramSocket();
             } catch (SocketException e) {
-                System.out.println("Connection failed");
+                System.out.println("Connection failed.");
             }
             synchronized (lock) {
                 while (true) {
@@ -124,7 +121,7 @@ public class RequestFile {
                         try {
                             lock.wait();
                         } catch (InterruptedException e) {
-                            System.out.println("Sending request");
+                            System.out.println("Sending request failed.");
                         }
                     }
 
@@ -155,9 +152,9 @@ public class RequestFile {
                             // the data.
                             ds.send(DpSend);
                         } catch (UnknownHostException e) {
-                            System.out.println("Unable to send discovery message; Unknown host");
+                            System.out.println("Unable to send request message; Unknown host");
                         } catch (IOException e) {
-                            System.out.println("Unable to send discovery message, IOException");
+                            System.out.println("Unable to send request message, IOException");
                         }
                     }
                     try {
