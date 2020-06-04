@@ -32,13 +32,16 @@ public class netwolf {
             System.out.println("Name: " + name + " | Address: " + address);
            }
         RequestFile requestFile = new RequestFile(requestPort, null);
-        /*
-        try {
+
+/*        try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             System.out.println("Can't sleep in main thread");
         }
-        requestFile.sendRequest("file.txt", "1010", list);*/
+        {
+            requestFile.sendRequest("file.txt", "1010", list);
+            fileTransmission.receiveFile("file.txt", "1010");
+        }*/
     }
     public static void answerRequest(String fileName, String TCPPort, String remoteAddress){
         fileTransmission.sendFile(fileName, TCPPort, remoteAddress);

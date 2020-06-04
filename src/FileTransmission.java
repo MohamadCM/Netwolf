@@ -55,23 +55,22 @@ public class FileTransmission {
                         Socket socket = new Socket();
                         socket.connect(new InetSocketAddress(dest , port), ACKTimeOut);
 
-                        System.out.println("READY" + socket.getRemoteSocketAddress()); //Sending data-ready signal
                         OutputStream outToServer = socket.getOutputStream();
                         DataOutputStream out = new DataOutputStream(outToServer);
-                        out.writeUTF("Hello from " + socket.getLocalSocketAddress());
+                        out.writeUTF("READY");
 
 
                         InputStream inFromServer = socket.getInputStream();
                         DataInputStream in = new DataInputStream(inFromServer);
                         String ACK = in.readUTF();
                         if(ACK.equals("OK")) { // Start sending file
-                            System.out.println("\u001B[34m" + "Sending " + fileName + " now" + "\u001B[0m");
+                            System.out.println("\u001B[34m" + "Sending " + fileName + " to "  + socket.getRemoteSocketAddress() + " now" + "\u001B[0m");
                         }
                         socket.close();
 
 
                     } catch (IOException e) {
-                        System.out.println("Can't start sending file.");
+                        System.out.println("We're not the machine that's going to send " + fileName);
                     }
                 }
             } catch (UnknownHostException e) {
