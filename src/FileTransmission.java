@@ -50,7 +50,7 @@ public class FileTransmission {
                 InetAddress dest = InetAddress.getByName(req[2]);
 
                 File file = Utility.findFile(fileName, new File(netwolf.getDirectory()));
-                boolean fileFound = ! (file.equals(null));
+                boolean fileFound = file == null;
                 if(fileFound){
                     try {
                         Socket socket = new Socket();
@@ -58,7 +58,7 @@ public class FileTransmission {
 
                         OutputStream outToServer = socket.getOutputStream();
                         DataOutputStream out = new DataOutputStream(outToServer);
-                        out.writeUTF("READY" + file.length()); // Send ready and size of the file
+                        out.writeUTF("READY," + file.length()); // Send ready and size of the file
 
 
                         InputStream inFromServer = socket.getInputStream();
@@ -118,7 +118,7 @@ public class FileTransmission {
                     out.writeUTF("OK");
                     //Receiving file here
                     DataInputStream dis = new DataInputStream(server.getInputStream());
-                    FileOutputStream fos = new FileOutputStream(fileName);
+                    FileOutputStream fos = new FileOutputStream(directory + "/" + fileName);
                     byte[] buffer = new byte[2048];
 
                     int fileSize = Integer.parseInt(ack[1]); // Send file size in separate msg

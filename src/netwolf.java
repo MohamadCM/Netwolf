@@ -9,7 +9,7 @@ public class netwolf {
     private static String clusterFileName = "cluster-list.txt";
     private static int discoveryPort = 9000;
     private static int discoveryIntervalSeconds = 10;
-    private static String currentNodeName = "N1";
+    private static String currentNodeName = "N2";
 
     private static int requestPort = 9001;
 
@@ -33,7 +33,7 @@ public class netwolf {
            }
         RequestFile requestFile = new RequestFile(requestPort, null);
 
-/*        try {
+        try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             System.out.println("Can't sleep in main thread");
@@ -41,7 +41,7 @@ public class netwolf {
         {
             requestFile.sendRequest("file.txt", "1010", list);
             fileTransmission.receiveFile("file.txt", "1010");
-        }*/
+        }
     }
     public static void answerRequest(String fileName, String TCPPort, String remoteAddress){
         fileTransmission.sendFile(fileName, TCPPort, remoteAddress);
