@@ -49,7 +49,8 @@ public class FileTransmission {
             try {
                 InetAddress dest = InetAddress.getByName(req[2]);
 
-                boolean fileFound = Utility.findFile(fileName, new File(netwolf.getDirectory()));
+                File file = Utility.findFile(fileName, new File(netwolf.getDirectory()));
+                boolean fileFound = ! (file.equals(null));
                 if(fileFound){
                     try {
                         Socket socket = new Socket();
@@ -57,20 +58,33 @@ public class FileTransmission {
 
                         OutputStream outToServer = socket.getOutputStream();
                         DataOutputStream out = new DataOutputStream(outToServer);
-                        out.writeUTF("READY");
+                        out.writeUTF("READY" + file.length()); // Send ready and size of the file
 
 
                         InputStream inFromServer = socket.getInputStream();
                         DataInputStream in = new DataInputStream(inFromServer);
                         String ACK = in.readUTF();
+
                         if(ACK.equals("OK")) { // Start sending file
                             System.out.println("\u001B[34m" + "Sending " + fileName + " to "  + socket.getRemoteSocketAddress() + " now" + "\u001B[0m");
+
+                            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                            FileInputStream fis = new FileInputStream(file);
+                            byte[] buffer = new byte[4096];
+
+                            while (fis.read(buffer) > 0) {
+                                dos.write(buffer);
+                            }
+
+                            fis.close();
+                            dos.close();
+
                         }
                         socket.close();
 
 
                     } catch (IOException e) {
-                        System.out.println("We're not the machine that's going to send " + fileName);
+                        System.out.println("\u001B[31m" + "We're not the machine that's going to send " + fileName + "\u001B[0m");
                     }
                 }
             } catch (UnknownHostException e) {
@@ -98,11 +112,28 @@ public class FileTransmission {
 
                 DataInputStream in = new DataInputStream(server.getInputStream());
 
-                String ack = in.readUTF();
-                if(ack.equals("READY")) {
+                String[] ack = (in.readUTF()).split(",");
+                if(ack[0].equals("READY")) {
                     DataOutputStream out = new DataOutputStream(server.getOutputStream());
                     out.writeUTF("OK");
                     //Receiving file here
+                    DataInputStream dis = new DataInputStream(server.getInputStream());
+                    FileOutputStream fos = new FileOutputStream(fileName);
+                    byte[] buffer = new byte[2048];
+
+                    int fileSize = Integer.parseInt(ack[1]); // Send file size in separate msg
+                    int read = 0;
+                    int totalRead = 0;
+                    int remaining = fileSize;
+                    while((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+                        totalRead += read;
+                        remaining -= read;
+                        System.out.println("Read " + totalRead + " bytes.");
+                        fos.write(buffer, 0, read);
+                    }
+
+                    fos.close();
+                    dis.close();
                 }
                 server.close();
             } catch (IOException e) {

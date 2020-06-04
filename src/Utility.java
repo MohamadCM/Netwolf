@@ -35,11 +35,12 @@ public class Utility {
      * Finds file in given directory
      * @param name is name of the file
      * @param directory is directory for search
-     * @return
+     * @return file
      */
-    public static boolean findFile(String name, File directory)
+    public static File findFile(String name, File directory)
     {
         File[] list = directory.listFiles();
+        File result = null;
         boolean found = false;
         if(list!=null)
             for (File file : list)
@@ -48,11 +49,13 @@ public class Utility {
                 {
                     String[] tmp = file.toString().split("/");
                     found = tmp[tmp.length - 1].equals(name);
-                    if (found)
+                    if (found) {
+                        result = file;
                         break;
+                    }
                 }
             }
-        return found;
+        return result;
     }
 
     /**
