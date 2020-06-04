@@ -8,7 +8,8 @@ public class netwolf {
 
     private static int requestPort = 9001;
     public static void main(String[] args) {
-        Discovery discovery = new Discovery(clusterFileName, discoveryPort, seconds, currentNodeName);
+        GUI gui = new GUI();
+/*        Discovery discovery = new Discovery(clusterFileName, discoveryPort, seconds, currentNodeName);
         Vector<String[]> list = discovery.list();
         for (int i = 0; i < list.size(); i++) {
             String [] record = list.get(i);
@@ -22,6 +23,6 @@ public class netwolf {
         } catch (InterruptedException e) {
             System.out.println("Can't sleep in main thread");
         }
-        requestFile.sendRequest("test.txt", "1010", list);
+        requestFile.sendRequest("test.txt", "1010", list);*/
     }
 }
