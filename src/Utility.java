@@ -1,3 +1,10 @@
+import java.io.File;
+
+/**
+ * Utility class
+ * @author Mohamad Chaman-Motlagh
+ * @version 1
+ */
 public class Utility {
      // IP of the current machine
 
@@ -22,6 +29,30 @@ public class Utility {
             i++;
         }
         return result.toString();
+    }
+
+    /**
+     * Finds file in given directory
+     * @param name is name of the file
+     * @param directory is directory for search
+     * @return
+     */
+    public static boolean findFile(String name, File directory)
+    {
+        File[] list = directory.listFiles();
+        boolean found = false;
+        if(list!=null)
+            for (File file : list)
+            {
+                if (!file.isDirectory())
+                {
+                    String[] tmp = file.toString().split("/");
+                    found = tmp[tmp.length - 1].equals(name);
+                    if (found)
+                        break;
+                }
+            }
+        return found;
     }
 
     /**

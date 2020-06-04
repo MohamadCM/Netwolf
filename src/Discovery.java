@@ -163,6 +163,7 @@ public class Discovery {
                             // Invoke the send call to actually send
                             // the data.
                             ds.send(DpSend);
+                            System.out.println("\u001B[33m" + "Discovery message sent" + "\u001B[0m");
                         } catch (UnknownHostException e) {
                             System.out.println("Unable to send discovery message; Unknown host");
                         } catch (IOException e) {
@@ -208,7 +209,7 @@ public class Discovery {
                 // receive the data in byte buffer.
                 try {
                     ds.receive(DpReceive);
-                    System.out.println("Discovery message received!");
+                    System.out.println("\u001B[33m" + "Discovery message received!" + "\u001B[0m");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

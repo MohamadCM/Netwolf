@@ -8,6 +8,8 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * This class is used to send or receive requests for files
+ * @author Mohamad Chaman-Motlagh
+ * @version 1
  */
 public class RequestFile {
     private int port;
@@ -67,10 +69,16 @@ public class RequestFile {
                 String data[] = (Utility.convertToString(received)).split(" ");
                 String filename = data[0];
                 String TCPPort = data[1];
+                String remoteAddress = DpReceive.getAddress().toString();
+                remoteAddress = remoteAddress.substring(1, remoteAddress.length());
 
-                System.out.println("Request received!\n" +
-                        "File name: " + filename +
-                        "TCP port: " + TCPPort);
+                System.out.println("\u001B[34m" +
+                        "Request received!\n" +
+                        "File name: " + filename + "\n" +
+                        "TCP port: " + TCPPort + "\n" +
+                        "Source: " + remoteAddress.toString() + "\n" +
+                        "\u001B[0m");
+                netwolf.answerRequest(filename, TCPPort, remoteAddress);
 
                 // Exit the server if each client sends "bye"
                 if (Utility.convertToString(received).toString().equals("bye"))
