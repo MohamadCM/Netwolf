@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -20,6 +21,14 @@ public class GUI extends JFrame {
             System.exit(0);
         }
         transitionLog = new JTextArea("Transition log\n");
+        transitionLog.setToolTipText("Console output appears here!");
+        JPanel scrollPanel = new JPanel();
+        scrollPanel.setLayout(new BorderLayout());
+        JScrollPane scroll = new JScrollPane(transitionLog);
+        //what comes here to auto scroll? so the bottom of the jtextarea will be seen? (currently I have to manually scrolldown to see new data)
+        scrollPanel.add(scroll, BorderLayout.CENTER);
+        DefaultCaret caret = (DefaultCaret)transitionLog.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         this.discovery = discovery;
         this.requestFile = requestFile;
@@ -35,8 +44,8 @@ public class GUI extends JFrame {
         getRootPane().setBorder(BorderFactory.createMatteBorder(border, border, border, border, Color.DARK_GRAY));
 
 
-        JPanel northPanel = new JPanel();
-        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.Y_AXIS));
+        JPanel southPanel = new JPanel();
+        southPanel.setLayout(new BoxLayout(southPanel, BoxLayout.Y_AXIS));
 
         JPanel clusterFilePane = new JPanel();
         clusterFilePane.setLayout(new BoxLayout(clusterFilePane, BoxLayout.X_AXIS));
@@ -46,9 +55,9 @@ public class GUI extends JFrame {
         clusterFileTextField.setText(clusterFileName);
         clusterFilePane.add(clusterFileLabel);
         clusterFilePane.add(clusterFileTextField);
-        northPanel.add(clusterFilePane);
+        southPanel.add(clusterFilePane);
 
-        northPanel.add(new JLabel(" "));
+        southPanel.add(new JLabel(" "));
 
         JPanel directoryPane = new JPanel();
         directoryPane.setLayout(new BoxLayout(directoryPane, BoxLayout.X_AXIS));
@@ -58,9 +67,9 @@ public class GUI extends JFrame {
         directoryTextField.setText(directory);
         directoryPane.add(directoryLabel);
         directoryPane.add(directoryTextField);
-        northPanel.add(directoryPane);
+        southPanel.add(directoryPane);
 
-        northPanel.add(new JLabel(" "));
+        southPanel.add(new JLabel(" "));
 
 
 
@@ -79,7 +88,7 @@ public class GUI extends JFrame {
         portPane.add(new JLabel("                   "));
         portPane.add(timeoutLabel);
         portPane.add(timeout);
-        northPanel.add(portPane);
+        southPanel.add(portPane);
 
         JPanel service = new JPanel();
         service.setLayout(new BoxLayout(service, BoxLayout.X_AXIS));
@@ -89,7 +98,7 @@ public class GUI extends JFrame {
         maximumService.setText(String.valueOf(maximumServices));
         service.add(maximumServiceLabel);
         service.add(maximumService);
-        northPanel.add(service);
+        southPanel.add(service);
 
         JPanel nodePane = new JPanel();
         nodePane.setLayout(new BoxLayout(nodePane, BoxLayout.X_AXIS));
@@ -112,12 +121,12 @@ public class GUI extends JFrame {
         nodePane.add(UDPPortLabel);
         nodePane.add(UDPPort);
 
-        northPanel.add(nodePane);
-        northPanel.add(new JLabel(" "));
+        southPanel.add(nodePane);
+        southPanel.add(new JLabel(" "));
 
 
-        JPanel southPanel = new JPanel();
-        southPanel.setLayout(new BorderLayout());
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BorderLayout());
         JButton refreshListBtn = new JButton("Refresh List");
         refreshListBtn.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
         JTextArea list = new JTextArea("Cluster list");
@@ -135,8 +144,9 @@ public class GUI extends JFrame {
         list.setMaximumSize(new Dimension(100, 100));
         list.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
         list.setEditable(false);
-        southPanel.add(refreshListBtn, BorderLayout.WEST);
-        southPanel.add(list, BorderLayout.CENTER);
+        list.setToolTipText("List of names and addresses");
+        northPanel.add(refreshListBtn, BorderLayout.WEST);
+        northPanel.add(list, BorderLayout.CENTER);
 
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BorderLayout());
@@ -164,14 +174,14 @@ public class GUI extends JFrame {
         centerPanel.add(reqPanel, BorderLayout.NORTH);
 
         transitionLog.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
-        centerPanel.add(transitionLog, BorderLayout.CENTER);
+        centerPanel.add(scrollPanel, BorderLayout.CENTER);
 
-        add(northPanel, BorderLayout.NORTH);
         add(southPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(centerPanel, BorderLayout.CENTER);
-        //  this.pack();
+
         setVisible(true);
-        //this.star
+
     }
 
     private void updateList(JTextArea list){
