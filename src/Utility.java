@@ -47,7 +47,8 @@ public class Utility {
             {
                 if (!file.isDirectory())
                 {
-                    String[] tmp = file.toString().split("/");
+                    String filePath = file.toString().replace('\\', '/');
+                    String[] tmp = filePath.split("/");
                     found = tmp[tmp.length - 1].equals(name);
                     if (found) {
                         result = file;
