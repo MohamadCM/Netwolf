@@ -58,7 +58,8 @@ public class netwolf {
 
             requestFile = new RequestFile(port);
 
-            UDP udp = new UDP(port, discovery, requestFile);
+            UDPReceiver udpReceiver = new UDPReceiver(port, discovery, requestFile);
+            udpReceiver.start();
 
             if(g) {
                 GUI gui = new GUI(discovery, requestFile, fileTransmission);

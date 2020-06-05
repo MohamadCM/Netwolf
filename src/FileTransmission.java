@@ -144,7 +144,7 @@ public class FileTransmission {
                         System.out.println("Read " + totalRead + " bytes.");
                         fos.write(buffer, 0, read);
                     }
-
+                    System.out.println("\u001B[32m" + fileName + " Received!" + "\u001B[0m");
                     fos.close();
                     dis.close();
                 }

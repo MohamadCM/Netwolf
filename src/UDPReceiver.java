@@ -3,13 +3,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-public class UDP extends Thread{
+public class UDPReceiver extends Thread{
     private int port;
     private Discovery discovery;
     private RequestFile requestFile;
     private static DatagramSocket ds;
 
-    public UDP(int port, Discovery discovery, RequestFile requestFile){
+    public UDPReceiver(int port, Discovery discovery, RequestFile requestFile){
         this.port = port;
         this.discovery = discovery;
         this.requestFile = requestFile;
