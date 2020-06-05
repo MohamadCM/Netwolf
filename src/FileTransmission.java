@@ -23,12 +23,12 @@ public class FileTransmission {
         requests = new LinkedList<String[]>();
     }
     public synchronized void sendFile(String fileName, String TCPPort, String remoteAddress){
-        if(requests.size() < maximumServices) {
             String[] req = new String[3];
             req[0] = fileName;
             req[1] = TCPPort;
             req[2] = remoteAddress;
-            requests.add(req);
+            requests.add(req); // Add request to a Queue
+        if(requests.size() < maximumServices) { // Start request if requests are maximum number of requests doesn't exceeds
             Thread send = new fileSender();
             send.start();
         }
@@ -42,6 +42,8 @@ public class FileTransmission {
         public void run(){
                 String[] req;
                 synchronized (requests){
+                    if(requests.isEmpty())
+                        return; // End function if the request Queue is empty
                     req = requests.remove();
                 }
                 String fileName = req[0];
@@ -90,6 +92,10 @@ public class FileTransmission {
                 }
             } catch (UnknownHostException e) {
                 e.printStackTrace();
+            }
+            if(requests.size() < maximumServices) { // Service a new request if not loaded
+                Thread send = new fileSender();
+                send.start();
             }
         }
 

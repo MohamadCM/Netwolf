@@ -174,6 +174,7 @@ public class GUI extends JFrame {
         centerPanel.add(reqPanel, BorderLayout.NORTH);
 
         transitionLog.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
+        transitionLog.setEditable(false);
         centerPanel.add(scrollPanel, BorderLayout.CENTER);
 
         add(southPanel, BorderLayout.SOUTH);
