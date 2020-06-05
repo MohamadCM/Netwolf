@@ -12,7 +12,7 @@ public class CommandLineInterface extends Thread {
     @Override
     public void run() {
         super.run();
-        System.out.println("Please enter exit or quit to finish the programme!");
+        System.out.println("Use exit or quit to finish the program!");
         while (true){
             Scanner scanner = new Scanner(System.in);
             String input = scanner.nextLine();

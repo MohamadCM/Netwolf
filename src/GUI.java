@@ -1,12 +1,26 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.Vector;
 
 public class GUI extends JFrame {
     private Discovery discovery;
     private RequestFile requestFile;
     private FileTransmission fileTransmission;
+    public static JTextArea transitionLog;
 
-    public GUI(Discovery discovery, RequestFile requestFile, FileTransmission fileTransmission){
+    public GUI(Discovery discovery, RequestFile requestFile, FileTransmission fileTransmission, String clusterFileName, String directory, int port,
+               int waitForFileTimeOutSeconds, int discoveryIntervalSeconds, int maximumServices, String currentNodeName){
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            System.out.println("Can't show GUI.");
+            System.exit(0);
+        }
+        transitionLog = new JTextArea("Transition log\n");
+
         this.discovery = discovery;
         this.requestFile = requestFile;
         this.fileTransmission = fileTransmission;
@@ -19,11 +33,6 @@ public class GUI extends JFrame {
         setLayout(new BorderLayout());
         int border = 10;
         getRootPane().setBorder(BorderFactory.createMatteBorder(border, border, border, border, Color.DARK_GRAY));
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            System.out.println("Can't show GUI");
-        }
 
 
         JPanel northPanel = new JPanel();
@@ -33,6 +42,8 @@ public class GUI extends JFrame {
         clusterFilePane.setLayout(new BoxLayout(clusterFilePane, BoxLayout.X_AXIS));
         JLabel clusterFileLabel = new JLabel("Cluster File name:    ");
         JTextField clusterFileTextField = new JTextField();
+        clusterFileTextField.setEditable(false);
+        clusterFileTextField.setText(clusterFileName);
         clusterFilePane.add(clusterFileLabel);
         clusterFilePane.add(clusterFileTextField);
         northPanel.add(clusterFilePane);
@@ -43,65 +54,132 @@ public class GUI extends JFrame {
         directoryPane.setLayout(new BoxLayout(directoryPane, BoxLayout.X_AXIS));
         JLabel directoryLabel = new JLabel("Service directory:     ");
         JTextField directoryTextField = new JTextField();
+        directoryTextField.setEditable(false);
+        directoryTextField.setText(directory);
         directoryPane.add(directoryLabel);
         directoryPane.add(directoryTextField);
         northPanel.add(directoryPane);
 
         northPanel.add(new JLabel(" "));
 
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new BorderLayout());
-        JButton startBtn = new JButton("Start/ Restart");
-        buttonPane.add(startBtn);
-        northPanel.add(buttonPane);
+
 
         JPanel portPane = new JPanel();
         portPane.setLayout(new BoxLayout(portPane, BoxLayout.X_AXIS));
-        JLabel disPortLabel = new JLabel("Discovery port: ");
-        JSpinner disPort = new JSpinner();
-        JLabel reqPortLabel = new JLabel("Request port: ");
-        JSpinner reqPort = new JSpinner();
-        portPane.add(disPortLabel);
+        JLabel disLabel = new JLabel("Discovery Interval time: ");
+        JTextField disPort = new JTextField();
+        disPort.setEditable(false);
+        disPort.setText(String.valueOf(discoveryIntervalSeconds / 1000));
+        JLabel timeoutLabel = new JLabel("File request timeout: ");
+        JTextField timeout = new JTextField();
+        timeout.setEditable(false);
+        timeout.setText(String.valueOf(waitForFileTimeOutSeconds / 1000));
+        portPane.add(disLabel);
         portPane.add(disPort);
-        portPane.add(new JLabel("                     "));
-        portPane.add(reqPortLabel);
-        portPane.add(reqPort);
+        portPane.add(new JLabel("                   "));
+        portPane.add(timeoutLabel);
+        portPane.add(timeout);
         northPanel.add(portPane);
 
-        JPanel middlePanel = new JPanel();
-        middlePanel.setLayout(new BorderLayout());
-        JButton refreshListBtn = new JButton("Refresh List");
-        refreshListBtn.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
-        JTextArea list = new JTextArea("Cluster list");
-        list.setMaximumSize(new Dimension(100, 100));
-        list.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
-        list.disable();
-        middlePanel.add(refreshListBtn, BorderLayout.WEST);
-        middlePanel.add(list, BorderLayout.CENTER);
+        JPanel service = new JPanel();
+        service.setLayout(new BoxLayout(service, BoxLayout.X_AXIS));
+        JLabel maximumServiceLabel = new JLabel("Maximum simultaneous services: ");
+        JTextField maximumService = new JTextField();
+        maximumService.setEditable(false);
+        maximumService.setText(String.valueOf(maximumServices));
+        service.add(maximumServiceLabel);
+        service.add(maximumService);
+        northPanel.add(service);
+
+        JPanel nodePane = new JPanel();
+        nodePane.setLayout(new BoxLayout(nodePane, BoxLayout.X_AXIS));
+        JLabel nodeNameLabel = new JLabel("Node name:");
+        JTextField nodeName = new JTextField();
+        nodeName.setEditable(false);
+        nodeName.setText(currentNodeName);
+        JLabel IPLabel = new JLabel("Local IP: ");
+        JTextField IP = new JTextField();
+        IP.setEditable(false);
+        IP.setText(Utility.getIP());
+        JLabel UDPPortLabel = new JLabel("UDP Port: ");
+        JTextField UDPPort = new JTextField();
+        UDPPort.setEditable(false);
+        UDPPort.setText(String.valueOf(port));
+        nodePane.add(nodeNameLabel);
+        nodePane.add(nodeName);
+        nodePane.add(IPLabel);
+        nodePane.add(IP);
+        nodePane.add(UDPPortLabel);
+        nodePane.add(UDPPort);
+
+        northPanel.add(nodePane);
+        northPanel.add(new JLabel(" "));
+
 
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new BorderLayout());
+        JButton refreshListBtn = new JButton("Refresh List");
+        refreshListBtn.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
+        JTextArea list = new JTextArea("Cluster list");
+        updateList(list);
+        refreshListBtn.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                updateList(list);
+            }
+            @Override public void mousePressed(MouseEvent mouseEvent) { }
+            @Override public void mouseReleased(MouseEvent mouseEvent) { }
+            @Override public void mouseEntered(MouseEvent mouseEvent) { }
+            @Override public void mouseExited(MouseEvent mouseEvent) { }
+        });
+        list.setMaximumSize(new Dimension(100, 100));
+        list.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
+        list.setEditable(false);
+        southPanel.add(refreshListBtn, BorderLayout.WEST);
+        southPanel.add(list, BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BorderLayout());
 
         JPanel reqPanel = new JPanel();
         reqPanel.setLayout(new BorderLayout());
         JLabel req = new JLabel("Request Files: ");
         JTextArea reqFile = new JTextArea();
         JButton reqSend = new JButton("Dispatch request");
+        reqSend.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                System.out.println("Get " + reqFile.getText());
+                netwolf.sendRequest(reqFile.getText(), netwolf.getList());
+            }
+            @Override public void mousePressed(MouseEvent mouseEvent) { }
+            @Override public void mouseReleased(MouseEvent mouseEvent) { }
+            @Override public void mouseEntered(MouseEvent mouseEvent) { }
+            @Override public void mouseExited(MouseEvent mouseEvent) { }
+        });
         reqPanel.add(req, BorderLayout.WEST);
         reqPanel.add(reqFile, BorderLayout.CENTER);
         reqPanel.add(reqSend, BorderLayout.EAST);
         reqPanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
-        southPanel.add(reqPanel, BorderLayout.NORTH);
+        centerPanel.add(reqPanel, BorderLayout.NORTH);
 
-        JTextArea transitionLog = new JTextArea("Transition log");
         transitionLog.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.DARK_GRAY));
-        southPanel.add(transitionLog, BorderLayout.CENTER);
+        centerPanel.add(transitionLog, BorderLayout.CENTER);
 
         add(northPanel, BorderLayout.NORTH);
-        add(middlePanel, BorderLayout.CENTER);
         add(southPanel, BorderLayout.SOUTH);
+        add(centerPanel, BorderLayout.CENTER);
         //  this.pack();
         setVisible(true);
         //this.star
+    }
+
+    private void updateList(JTextArea list){
+        Vector<String[]> col = netwolf.getList();
+        StringBuilder res = new StringBuilder();
+        for(String[] nameAdd : col){
+            res.append(nameAdd[0]).append(" ").append(nameAdd[1]).append("\n");
+        }
+        list.setText(res.toString());
     }
 }

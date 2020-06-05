@@ -1,3 +1,8 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.security.Guard;
 import java.util.Vector;
 
 /**
@@ -33,24 +38,28 @@ public class netwolf {
 
     public static void main(String[] args) {
         Boolean g = false;
-        for (int i = 0; i < args.length; i++) {
-            String tmp = args[i];
-            if(tmp.equalsIgnoreCase("-l") && (i + 1 < args.length))
-                clusterFileName = args[i + 1];
-            if(tmp.equalsIgnoreCase("-d") && (i + 1 < args.length))
-                directory = args[i + 1];
-            if(tmp.equalsIgnoreCase("-p")  && (i + 1 < args.length))
-                port = Integer.parseInt(args[i + 1]);
-            if(tmp.equalsIgnoreCase("-t") && (i + 1 < args.length))
-                waitForFileTimeOutSeconds = Integer.parseInt(args[i + 1]) * 1000;
-            if(tmp.equalsIgnoreCase("-i") && (i + 1 < args.length))
-                discoveryIntervalSeconds = Integer.parseInt(args[i + 1]) * 1000;
-            if(tmp.equalsIgnoreCase("-m") && (i + 1 < args.length))
-                maximumServices = Integer.parseInt(args[i + 1]);
-            if(tmp.equalsIgnoreCase("-n") && (i + 1 < args.length))
-                currentNodeName = args[i + 1];
-            if(tmp.equalsIgnoreCase("-g"))
-                g = true;
+        try {
+            for (int i = 0; i < args.length; i++) {
+                String tmp = args[i];
+                if (tmp.equalsIgnoreCase("-l") && (i + 1 < args.length))
+                    clusterFileName = args[i + 1];
+                if (tmp.equalsIgnoreCase("-d") && (i + 1 < args.length))
+                    directory = args[i + 1];
+                if (tmp.equalsIgnoreCase("-p") && (i + 1 < args.length))
+                    port = Integer.parseInt(args[i + 1]);
+                if (tmp.equalsIgnoreCase("-t") && (i + 1 < args.length))
+                    waitForFileTimeOutSeconds = Integer.parseInt(args[i + 1]) * 1000;
+                if (tmp.equalsIgnoreCase("-i") && (i + 1 < args.length))
+                    discoveryIntervalSeconds = Integer.parseInt(args[i + 1]) * 1000;
+                if (tmp.equalsIgnoreCase("-m") && (i + 1 < args.length))
+                    maximumServices = Integer.parseInt(args[i + 1]);
+                if (tmp.equalsIgnoreCase("-n") && (i + 1 < args.length))
+                    currentNodeName = args[i + 1];
+                if (tmp.equalsIgnoreCase("-g"))
+                    g = true;
+            }
+        } catch (Exception e){
+            System.out.println("\u001B[31m" + "Wrong input parameters." + "\u001B[0m");
         }
             fileTransmission = new FileTransmission(directory, maximumServices, waitForFileTimeOutSeconds);
 
@@ -62,7 +71,12 @@ public class netwolf {
             udpReceiver.start();
 
             if(g) {
-                GUI gui = new GUI(discovery, requestFile, fileTransmission);
+                new Thread(){
+                    GUI gui = new GUI(discovery, requestFile, fileTransmission,
+                            clusterFileName, directory, port, waitForFileTimeOutSeconds, discoveryIntervalSeconds, maximumServices, currentNodeName);
+
+                }.start();
+                Console.redirectOutput(GUI.transitionLog);
             }
             Thread CLI = new CommandLineInterface(discovery, requestFile, fileTransmission);
             CLI.start();
@@ -84,6 +98,7 @@ public class netwolf {
         return discovery.list();
     }
     public static void sendRequest(String fileName, Vector<String[]> list){
+
         int TCPPort = (int)((Math.random()) * 60000) + 1024;
         requestFile.sendRequest(fileName, String.valueOf(TCPPort), list);
         fileTransmission.receiveFile(fileName, String.valueOf(TCPPort), list);
@@ -97,5 +112,61 @@ public class netwolf {
      */
     public static String getDirectory(){
         return directory;
+    }
+    //
+    private static class Console implements Runnable {
+        JTextArea displayPane;
+        BufferedReader reader;
+
+        private Console(JTextArea displayPane, PipedOutputStream pos) {
+            this.displayPane = displayPane;
+
+            try {
+                PipedInputStream pis = new PipedInputStream(pos);
+                reader = new BufferedReader(new InputStreamReader(pis));
+            } catch (IOException e) {
+                System.out.println("Can't start GUI, \n" +
+                        "Exiting");
+                System.exit(0);
+            }
+        }
+
+        public void run() {
+            String line = null;
+
+            try {
+                while ((line = reader.readLine()) != null) {
+//              displayPane.replaceSelection( line + "\n" );
+                    displayPane.append(line + "\n");
+                    displayPane.setCaretPosition(displayPane.getDocument().getLength());
+                }
+
+                System.err.println("im here");
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null,
+                        "Error redirecting output : " + ioe.getMessage());
+            }
+        }
+
+        public static void redirectOutput(JTextArea displayPane) {
+            Console.redirectOut(displayPane);
+            Console.redirectErr(displayPane);
+        }
+
+        public static void redirectOut(JTextArea displayPane) {
+            PipedOutputStream pos = new PipedOutputStream();
+            System.setOut(new PrintStream(pos, true));
+
+            Console console = new Console(displayPane, pos);
+            new Thread(console).start();
+        }
+
+        public static void redirectErr(JTextArea displayPane) {
+            PipedOutputStream pos = new PipedOutputStream();
+            System.setErr(new PrintStream(pos, true));
+
+            Console console = new Console(displayPane, pos);
+            new Thread(console).start();
+        }
     }
 }
