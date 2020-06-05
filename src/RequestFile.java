@@ -59,6 +59,8 @@ public class RequestFile {
 
 
                 String data[] = (Utility.convertToString(received)).split(" ");
+                if(data.length < 2) // This means message type is not request file (It's probably discovery)
+                    continue;
                 String filename = data[0];
                 String TCPPort = data[1];
                 String remoteAddress = DpReceive.getAddress().toString();

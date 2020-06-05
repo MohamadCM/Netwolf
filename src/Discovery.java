@@ -210,6 +210,8 @@ public class Discovery {
 
                 Vector<String[]> tmp = new Vector<>();
                 String[] input = (Utility.convertToString(received)).split(",");
+                if(input.length < 2) // This means message type is not discovery (It's probably request for file)
+                    continue;
                 for (int i = 0; i < input.length; i++) {
                     tmp.add(input[i].split(" "));
                 }
