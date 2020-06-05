@@ -51,7 +51,7 @@ public class FileTransmission {
                 System.out.println("listening on " + Utility.getIP() + ":" + port + " TCP");
 
                 File file = Utility.findFile(fileName, new File(netwolf.getDirectory()));
-                boolean fileFound = file == null;
+                boolean fileFound = file != null;
                 if(fileFound){
                     try {
                         Socket socket = new Socket();
@@ -122,6 +122,7 @@ public class FileTransmission {
                     //Receiving file here
                     String address = server.getRemoteSocketAddress().toString();
                     address = address.substring(1, address.length() - 1);
+                    address = address.split(":")[0];
                     String nodeName = "";
                     for(String[] st: namesAndAddresses){
                         if(st[1].equals(address))
