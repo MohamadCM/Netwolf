@@ -143,8 +143,11 @@ public class netwolf {
 
                 System.err.println("im here");
             } catch (IOException ioe) {
-                JOptionPane.showMessageDialog(null,
-                        "Error redirecting output : " + ioe.getMessage());
+                /*JOptionPane.showMessageDialog(null,
+                        "Error redirecting output : " + ioe.getMessage());*/
+
+                Console.redirectOutput(GUI.transitionLog);
+                return;
             }
         }
 
