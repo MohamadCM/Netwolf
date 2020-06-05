@@ -1,3 +1,5 @@
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.Vector;
 
 /**
@@ -24,7 +26,7 @@ public class netwolf {
 
 
     private static RequestFile requestFile;
-    private static int requestPort = 9001;
+    private static DatagramSocket ds;
 
     private static FileTransmission fileTransmission;
     private static int maximumServices = 5;
@@ -53,20 +55,24 @@ public class netwolf {
             if(tmp.equalsIgnoreCase("-g"))
                 g = true;
         }
-        if(discoveryPort == 9001) {
-            System.out.println("Discovery port taken, switching to next available port!");
-            discoveryPort++;
-        }
-        fileTransmission = new FileTransmission(directory, maximumServices, waitForFileTimeOutSeconds);
+        try {
+            ds = new DatagramSocket(discoveryPort);
+            fileTransmission = new FileTransmission(directory, maximumServices, waitForFileTimeOutSeconds);
 
-        discovery = new Discovery(clusterFileName, discoveryPort, discoveryIntervalSeconds, currentNodeName);
+            discovery = new Discovery(clusterFileName, discoveryPort, ds, discoveryIntervalSeconds, currentNodeName);
 
-        requestFile = new RequestFile(requestPort);
-        if(g) {
-            GUI gui = new GUI(discovery, requestFile, fileTransmission);
-        }
+            requestFile = new RequestFile(discoveryPort, ds);
+            if(g) {
+                GUI gui = new GUI(discovery, requestFile, fileTransmission);
+            }
             Thread CLI = new CommandLineInterface(discovery, requestFile, fileTransmission);
             CLI.start();
+
+        } catch (SocketException e) {
+            System.out.println("UDP connection failed, \n" +
+                    "Exiting");
+        }
+
 
     }
     public synchronized static void printList(){

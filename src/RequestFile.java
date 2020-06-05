@@ -13,8 +13,8 @@ import java.util.concurrent.BlockingQueue;
  */
 public class RequestFile {
     private int port;
-
-    Thread sendRequest;
+    private DatagramSocket ds;
+    private Thread sendRequest;
     private final Object lock = new Object();
     private Queue<String> ports;
     private Queue<String> fileNames;
@@ -22,8 +22,9 @@ public class RequestFile {
     /**
      * @param port which port to Listen to
      */
-    public RequestFile(int port){
+    public RequestFile(int port, DatagramSocket ds){
         this.port = port;
+        this.ds = ds;
         ports = new LinkedList<String>();
         fileNames = new LinkedList<String>();
         addresses = new LinkedList<Vector<String[]>>();
@@ -40,12 +41,6 @@ public class RequestFile {
         @Override
         public void run(){
 
-            DatagramSocket ds = null; // Creating Socket to initiate connection
-            try {
-                ds = new DatagramSocket(port);
-            } catch (SocketException e) {
-                System.out.println("Connection failed");
-            }
             byte[] received = new byte[65535];
 
             DatagramPacket DpReceive = null;

@@ -12,6 +12,7 @@ public class Discovery {
     private String filename;
     private Vector<String[]> namesAndAddresses;
     private int port;
+    private DatagramSocket ds;
     private int time;
     /**
      * @param filename is cluster-file
@@ -19,9 +20,10 @@ public class Discovery {
      * @param time is interval time between sending each discovery message
      * Creating an Object will start sending and receiving Discovery messages
      */
-    public Discovery(String filename, int port, int time, String currentNodeName){
+    public Discovery(String filename, int port, DatagramSocket ds, int time, String currentNodeName){
         this.filename = filename;
         this.port = port;
+        this.ds = ds;
         this.time = time;
         namesAndAddresses = new Vector<String[]>();
 
@@ -188,12 +190,6 @@ public class Discovery {
         public void run(){
             super.run();
 
-            DatagramSocket ds = null; // Creating Socket to initiate connection
-            try {
-                ds = new DatagramSocket(port);
-            } catch (SocketException e) {
-                System.out.println("Connection failed");
-            }
             byte[] received = new byte[65535];
 
             DatagramPacket DpReceive = null;
