@@ -22,48 +22,35 @@ public class RequestFile {
     /**
      * @param port which port to Listen to
      */
-    public RequestFile(int port, DatagramSocket ds){
+    public RequestFile(int port){
         this.port = port;
         this.ds = ds;
         ports = new LinkedList<String>();
         fileNames = new LinkedList<String>();
         addresses = new LinkedList<Vector<String[]>>();
 
-        Thread getRequest = new GetRequest();
-        getRequest.start();
 
         sendRequest = new SendRequest();
         sendRequest.start();
     }
-
+    public void getRequest(String received){
+        Thread get = new GetRequest(received);
+        get.start();
+    }
     // This class is used to get files requests messages
     private class GetRequest extends Thread{
+        private String received;
+        public GetRequest(String received){
+            this.received = received;
+        }
         @Override
         public void run(){
 
-            byte[] received = new byte[65535];
 
-            DatagramPacket DpReceive = null;
-            while (true) // Receiving discovery message
-            {
-
-                // create a DatgramPacket to receive the data.
-                DpReceive = new DatagramPacket(received, received.length);
-
-                // receive the data in byte buffer.
-                try {
-                    ds.receive(DpReceive);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-                String data[] = (Utility.convertToString(received)).split(" ");
-                if(data.length < 2) // This means message type is not request file (It's probably discovery)
-                    continue;
+                String data[] = received.split(" ");
                 String filename = data[0];
                 String TCPPort = data[1];
-                String remoteAddress = DpReceive.getAddress().toString();
+                String remoteAddress = data[2];
                 remoteAddress = remoteAddress.substring(1, remoteAddress.length());
 
                 System.out.println("\u001B[34m" +
@@ -74,16 +61,6 @@ public class RequestFile {
                         "\u001B[0m");
                 netwolf.answerRequest(filename, TCPPort, remoteAddress);
 
-                // Exit the server if each client sends "bye"
-                if (Utility.convertToString(received).toString().equals("bye"))
-                {
-                    System.out.println("Client sent bye.....EXITING");
-                    break;
-                }
-
-                // Clear the buffer after every message.
-                received = new byte[65535];
-            }
         }
     }
     public void sendRequest(String fileName, String TCPPort, Vector<String[]> namesAndAddresses){
@@ -131,7 +108,7 @@ public class RequestFile {
                     String sentData = null;
                     StringBuilder inp = new StringBuilder();
                     inp.append(fileName).append(" ").append(TCPPort);
-                    sentData = inp.toString();
+                    sentData = "request;" + inp.toString();
 
                     // Convert the String input into the byte array.
                     buffer = sentData.getBytes();

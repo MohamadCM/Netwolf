@@ -1,5 +1,3 @@
-import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.util.Vector;
 
 /**
@@ -11,7 +9,7 @@ import java.util.Vector;
  * -l for cluster-file name
  * -d for directory name
  * -n for node name
- * -p for UDP discovery port
+ * -p for UDP port
  * -t for file request timeout in seconds
  * -i for discovery message interval time in seconds
  * -m for maximum number of service done simultaneously
@@ -19,14 +17,13 @@ import java.util.Vector;
  */
 public class netwolf {
     private static String clusterFileName = "cluster-list.txt";
-    private static int discoveryPort = 9000;
+    private static int port = 9000;
     private static Discovery discovery;
     private static int discoveryIntervalSeconds = 10 * 1000;
     private static String currentNodeName = "N1";
 
 
     private static RequestFile requestFile;
-    private static DatagramSocket ds;
 
     private static FileTransmission fileTransmission;
     private static int maximumServices = 5;
@@ -43,7 +40,7 @@ public class netwolf {
             if(tmp.equalsIgnoreCase("-d") && (i + 1 < args.length))
                 directory = args[i + 1];
             if(tmp.equalsIgnoreCase("-p")  && (i + 1 < args.length))
-                discoveryPort = Integer.parseInt(args[i + 1]);
+                port = Integer.parseInt(args[i + 1]);
             if(tmp.equalsIgnoreCase("-t") && (i + 1 < args.length))
                 waitForFileTimeOutSeconds = Integer.parseInt(args[i + 1]) * 1000;
             if(tmp.equalsIgnoreCase("-i") && (i + 1 < args.length))
@@ -55,23 +52,21 @@ public class netwolf {
             if(tmp.equalsIgnoreCase("-g"))
                 g = true;
         }
-        try {
-            ds = new DatagramSocket(discoveryPort);
             fileTransmission = new FileTransmission(directory, maximumServices, waitForFileTimeOutSeconds);
 
-            discovery = new Discovery(clusterFileName, discoveryPort, ds, discoveryIntervalSeconds, currentNodeName);
+            discovery = new Discovery(clusterFileName, port, discoveryIntervalSeconds, currentNodeName);
 
-            requestFile = new RequestFile(discoveryPort, ds);
+            requestFile = new RequestFile(port);
+
+            UDP udp = new UDP(port, discovery, requestFile);
+
             if(g) {
                 GUI gui = new GUI(discovery, requestFile, fileTransmission);
             }
             Thread CLI = new CommandLineInterface(discovery, requestFile, fileTransmission);
             CLI.start();
 
-        } catch (SocketException e) {
-            System.out.println("UDP connection failed, \n" +
-                    "Exiting");
-        }
+
 
 
     }

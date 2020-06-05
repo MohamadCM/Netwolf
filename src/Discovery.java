@@ -20,7 +20,7 @@ public class Discovery {
      * @param time is interval time between sending each discovery message
      * Creating an Object will start sending and receiving Discovery messages
      */
-    public Discovery(String filename, int port, DatagramSocket ds, int time, String currentNodeName){
+    public Discovery(String filename, int port, int time, String currentNodeName){
         this.filename = filename;
         this.port = port;
         this.ds = ds;
@@ -38,9 +38,7 @@ public class Discovery {
         }
 
         Thread sendDiscovery = new SendDiscovery();
-        Thread getDiscovery = new GetDiscovery();
         sendDiscovery.start();
-        getDiscovery.start();
     }
     // Read file and updates namesAndAddresses Vector
     private synchronized void readFile(){
@@ -150,7 +148,7 @@ public class Discovery {
                         inp.append(tmp[0]).append(" ").append(tmp[1]).append(",");
                     }
                     inp.append(Utility.getNodeName()).append(" ").append(Utility.getIP());
-                    sentData = inp.toString();
+                    sentData = "discovery;" + inp.toString();
 
                     // Convert the String input into the byte array.
                     buffer = sentData.getBytes();
@@ -184,50 +182,34 @@ public class Discovery {
                 }
         }
     }
-    // This class is used to get discovery messages
+
+    /**
+     * Start processing discovery message
+     * @param received is raw discovery message
+     */
+    public void getDiscovery(String received){
+        Thread get = new GetDiscovery(received);
+        get.start();
+    }
+    // This class is used to process discovery messages
     private class GetDiscovery extends Thread{
+        private String received;
+        public GetDiscovery(String received){
+            this.received = received;
+        }
         @Override
         public void run(){
             super.run();
 
-            byte[] received = new byte[65535];
-
-            DatagramPacket DpReceive = null;
-            while (true) // Receiving discovery message
-            {
-
-                // create a DatgramPacket to receive the data.
-                DpReceive = new DatagramPacket(received, received.length);
-
-                // receive the data in byte buffer.
-                try {
-                    ds.receive(DpReceive);
-                    System.out.println("\u001B[33m" + "Discovery message received!" + "\u001B[0m");
-                } catch (IOException e) {
-                    System.out.println("Failed to receive discovery message.");
-                }
-
-
+                System.out.println("\u001B[33m" + "Discovery message received!" + "\u001B[0m");
                 Vector<String[]> tmp = new Vector<>();
-                String[] input = (Utility.convertToString(received)).split(",");
-                if(input.length < 2) // This means message type is not discovery (It's probably request for file)
-                    continue;
+                String[] input = received.split(",");
+
                 for (int i = 0; i < input.length; i++) {
                     tmp.add(input[i].split(" "));
                 }
 
                 writeToFile(tmp);
-
-                // Exit the server if each client sends "bye"
-                if (Utility.convertToString(received).toString().equals("bye"))
-                {
-                    System.out.println("Client sent bye.....EXITING");
-                    break;
-                }
-
-                // Clear the buffer after every message.
-                received = new byte[65535];
-            }
         }
     }
 }
