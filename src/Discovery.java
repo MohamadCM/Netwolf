@@ -53,8 +53,10 @@ public class Discovery {
 
             String st;
             while ((st = bufferedReader.readLine()) != null) {
+                if(st != null && st.length() >= 8) {
                     String[] split = st.split(" ");
-                    namesAndAddresses.add(split); // First name and address belongs to current node
+                    namesAndAddresses.add(split);
+                }
             }
             bufferedReader.close();
             fileReader.close();

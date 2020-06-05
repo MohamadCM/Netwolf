@@ -149,8 +149,9 @@ public class FileTransmission {
                     dis.close();
                 }
                 server.close();
+                serverSocket.close();
             } catch (IOException e) {
-                System.out.println("Can't receive file");
+                System.out.println("Can't receive file.");
             }
 
         }
